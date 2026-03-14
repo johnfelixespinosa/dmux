@@ -99,6 +99,20 @@
 		DA7A10CA710E000000000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000001 /* Localizable.xcstrings */; };
 		DA7A10CA710E000000000004 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA7A10CA710E000000000002 /* InfoPlist.xcstrings */; };
 		A5001623 /* cmux.sdef in Resources */ = {isa = PBXBuildFile; fileRef = A5001622 /* cmux.sdef */; };
+		DA0002000000000000000001 /* DmuxAgentProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000001 /* DmuxAgentProvider.swift */; };
+		DA0002000000000000000002 /* DmuxClaudeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000002 /* DmuxClaudeProvider.swift */; };
+		DA0002000000000000000003 /* DmuxCodexProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000003 /* DmuxCodexProvider.swift */; };
+		DA0002000000000000000004 /* DmuxContextCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000004 /* DmuxContextCardView.swift */; };
+		DA0002000000000000000005 /* DmuxDragCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000005 /* DmuxDragCoordinator.swift */; };
+		DA0002000000000000000006 /* DmuxDragOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000006 /* DmuxDragOverlayView.swift */; };
+		DA0002000000000000000007 /* DmuxNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000007 /* DmuxNotifications.swift */; };
+		DA0002000000000000000008 /* DmuxTransferCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0001000000000000000008 /* DmuxTransferCoordinator.swift */; };
+		DA0004000000000000000001 /* DmuxAgentProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0003000000000000000001 /* DmuxAgentProviderTests.swift */; };
+		DA0004000000000000000002 /* DmuxClaudeProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0003000000000000000002 /* DmuxClaudeProviderTests.swift */; };
+		DA0004000000000000000003 /* DmuxCodexProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0003000000000000000003 /* DmuxCodexProviderTests.swift */; };
+		DA0004000000000000000004 /* DmuxDragCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0003000000000000000004 /* DmuxDragCoordinatorTests.swift */; };
+		DA0004000000000000000005 /* DmuxIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0003000000000000000005 /* DmuxIntegrationTests.swift */; };
+		DA0004000000000000000006 /* DmuxTransferCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0003000000000000000006 /* DmuxTransferCoordinatorTests.swift */; };
 			/* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -245,6 +259,20 @@
 					DA7A10CA710E000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		DA7A10CA710E000000000002 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		A5001622 /* cmux.sdef */ = {isa = PBXFileReference; lastKnownFileType = text.sdef; path = cmux.sdef; sourceTree = "<group>"; };
+		DA0001000000000000000001 /* DmuxAgentProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxAgentProvider.swift; sourceTree = "<group>"; };
+		DA0001000000000000000002 /* DmuxClaudeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxClaudeProvider.swift; sourceTree = "<group>"; };
+		DA0001000000000000000003 /* DmuxCodexProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxCodexProvider.swift; sourceTree = "<group>"; };
+		DA0001000000000000000004 /* DmuxContextCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxContextCardView.swift; sourceTree = "<group>"; };
+		DA0001000000000000000005 /* DmuxDragCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxDragCoordinator.swift; sourceTree = "<group>"; };
+		DA0001000000000000000006 /* DmuxDragOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxDragOverlayView.swift; sourceTree = "<group>"; };
+		DA0001000000000000000007 /* DmuxNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxNotifications.swift; sourceTree = "<group>"; };
+		DA0001000000000000000008 /* DmuxTransferCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxTransferCoordinator.swift; sourceTree = "<group>"; };
+		DA0003000000000000000001 /* DmuxAgentProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxAgentProviderTests.swift; sourceTree = "<group>"; };
+		DA0003000000000000000002 /* DmuxClaudeProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxClaudeProviderTests.swift; sourceTree = "<group>"; };
+		DA0003000000000000000003 /* DmuxCodexProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxCodexProviderTests.swift; sourceTree = "<group>"; };
+		DA0003000000000000000004 /* DmuxDragCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxDragCoordinatorTests.swift; sourceTree = "<group>"; };
+		DA0003000000000000000005 /* DmuxIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxIntegrationTests.swift; sourceTree = "<group>"; };
+		DA0003000000000000000006 /* DmuxTransferCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DmuxTransferCoordinatorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -407,6 +435,14 @@
 				A5001241 /* WindowDecorationsController.swift */,
 				A5001222 /* WindowAccessor.swift */,
 				A5001611 /* SessionPersistence.swift */,
+				DA0001000000000000000001 /* DmuxAgentProvider.swift */,
+				DA0001000000000000000002 /* DmuxClaudeProvider.swift */,
+				DA0001000000000000000003 /* DmuxCodexProvider.swift */,
+				DA0001000000000000000004 /* DmuxContextCardView.swift */,
+				DA0001000000000000000005 /* DmuxDragCoordinator.swift */,
+				DA0001000000000000000006 /* DmuxDragOverlayView.swift */,
+				DA0001000000000000000007 /* DmuxNotifications.swift */,
+				DA0001000000000000000008 /* DmuxTransferCoordinator.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -477,6 +513,12 @@
 					FA000001A1B2C3D4E5F60718 /* WorkspaceStressProfileTests.swift */,
 					A5008380 /* BrowserFindJavaScriptTests.swift */,
 					A5008382 /* CommandPaletteSearchEngineTests.swift */,
+					DA0003000000000000000001 /* DmuxAgentProviderTests.swift */,
+					DA0003000000000000000002 /* DmuxClaudeProviderTests.swift */,
+					DA0003000000000000000003 /* DmuxCodexProviderTests.swift */,
+					DA0003000000000000000004 /* DmuxDragCoordinatorTests.swift */,
+					DA0003000000000000000005 /* DmuxIntegrationTests.swift */,
+					DA0003000000000000000006 /* DmuxTransferCoordinatorTests.swift */,
 				);
 				path = cmuxTests;
 				sourceTree = "<group>";
@@ -679,6 +721,14 @@
 				A5001240 /* WindowDecorationsController.swift in Sources */,
 				A500120C /* WindowAccessor.swift in Sources */,
 				A5001610 /* SessionPersistence.swift in Sources */,
+				DA0002000000000000000001 /* DmuxAgentProvider.swift in Sources */,
+				DA0002000000000000000002 /* DmuxClaudeProvider.swift in Sources */,
+				DA0002000000000000000003 /* DmuxCodexProvider.swift in Sources */,
+				DA0002000000000000000004 /* DmuxContextCardView.swift in Sources */,
+				DA0002000000000000000005 /* DmuxDragCoordinator.swift in Sources */,
+				DA0002000000000000000006 /* DmuxDragOverlayView.swift in Sources */,
+				DA0002000000000000000007 /* DmuxNotifications.swift in Sources */,
+				DA0002000000000000000008 /* DmuxTransferCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -717,6 +767,12 @@
 					FA000000A1B2C3D4E5F60718 /* WorkspaceStressProfileTests.swift in Sources */,
 					A5008381 /* BrowserFindJavaScriptTests.swift in Sources */,
 					A5008383 /* CommandPaletteSearchEngineTests.swift in Sources */,
+					DA0004000000000000000001 /* DmuxAgentProviderTests.swift in Sources */,
+					DA0004000000000000000002 /* DmuxClaudeProviderTests.swift in Sources */,
+					DA0004000000000000000003 /* DmuxCodexProviderTests.swift in Sources */,
+					DA0004000000000000000004 /* DmuxDragCoordinatorTests.swift in Sources */,
+					DA0004000000000000000005 /* DmuxIntegrationTests.swift in Sources */,
+					DA0004000000000000000006 /* DmuxTransferCoordinatorTests.swift in Sources */,
 				);
 				runOnlyForDeploymentPostprocessing = 0;
 			};

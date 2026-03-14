@@ -51,7 +51,7 @@ enum DmuxTransferCoordinator {
         guard let path = session.transcriptPath else {
             return .empty(reason: "No transcript path for this session")
         }
-        let messages = provider.extractMessages(from: path)
+        let messages = await provider.extractMessages(from: path)
         return await preparePayload(messages: messages)
     }
 
