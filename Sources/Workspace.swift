@@ -5169,6 +5169,11 @@ extension Workspace: BonsplitDelegate {
             _ = newTerminalSurface(inPane: pane)
         case "browser":
             _ = newBrowserSurface(inPane: pane)
+        case "dmux-drag-toggle":
+            let isActive = dmuxDragCoordinator.toggleDragMode()
+            #if DEBUG
+            dlog("dmux.dragMode toggled=\(isActive) from pane=\(pane)")
+            #endif
         default:
             _ = newTerminalSurface(inPane: pane)
         }
