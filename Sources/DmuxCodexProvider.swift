@@ -25,8 +25,27 @@ final class CodexProvider: AgentContextProvider {
             return (id, updatedAt)
         }
 
-        guard let latest = entries.sorted(by: { $0.updatedAt > $1.updatedAt }).first else { return nil }
+        // Sort by most recent first
+        let sorted = entries.sorted { $0.updatedAt > $1.updatedAt }
 
+        // Try to find a session whose transcript's session_meta.cwd matches the pane's cwd
+        for entry in sorted {
+            guard let path = findSessionFile(sessionId: entry.id) else { continue }
+            if sessionCwdMatches(transcriptPath: path, expectedCwd: cwd) {
+                return TrackedAgentSession(
+                    agent: .codex,
+                    sessionId: entry.id,
+                    cwd: cwd,
+                    transcriptPath: path,
+                    workspaceId: UUID(),
+                    panelId: UUID(),
+                    pid: 0
+                )
+            }
+        }
+
+        // Fallback: newest session regardless of cwd
+        guard let latest = sorted.first else { return nil }
         let transcriptPath = findSessionFile(sessionId: latest.id)
 
         return TrackedAgentSession(
@@ -38,6 +57,20 @@ final class CodexProvider: AgentContextProvider {
             panelId: UUID(),
             pid: 0
         )
+    }
+
+    /// Check if a Codex transcript's session_meta.payload.cwd matches the expected cwd.
+    private func sessionCwdMatches(transcriptPath: String, expectedCwd: String) -> Bool {
+        guard let data = FileManager.default.contents(atPath: transcriptPath),
+              let content = String(data: data, encoding: .utf8),
+              let firstLine = content.split(separator: "\n").first,
+              let lineData = firstLine.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+              json["type"] as? String == "session_meta",
+              let payload = json["payload"] as? [String: Any],
+              let sessionCwd = payload["cwd"] as? String
+        else { return false }
+        return sessionCwd == expectedCwd
     }
 
     func extractMessages(from path: String) -> [TransferMessage] {

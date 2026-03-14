@@ -5389,21 +5389,44 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
         onFocus?()
     }
 
+    /// Whether a dmux drag gesture is currently in progress on this view.
+    private var dmuxDragActive = false
+
+    /// Resolve the active workspace via AppDelegate → TabManager → selected tab.
+    private func dmuxActiveWorkspace() -> Workspace? {
+        guard let tm = AppDelegate.shared?.tabManager, let wsId = tm.selectedTabId else { return nil }
+        return tm.tabs.first(where: { $0.id == wsId })
+    }
+
+    /// Find the panel ID of the GhosttyNSView under a window-coordinate point (for merge target detection).
+    private func dmuxPanelIdUnderPoint(_ windowPoint: NSPoint) -> UUID? {
+        guard let contentView = window?.contentView else { return nil }
+        let localPoint = contentView.convert(windowPoint, from: nil)
+        guard let hitView = contentView.hitTest(localPoint) else { return nil }
+        // Walk up the view hierarchy to find a GhosttyNSView
+        var view: NSView? = hitView
+        while let v = view {
+            if let ghosttyView = v as? GhosttyNSView, ghosttyView !== self {
+                return ghosttyView.terminalSurface?.id
+            }
+            view = v.superview
+        }
+        return nil
+    }
+
     override func mouseDown(with event: NSEvent) {
-        // In dmux drag mode (toggled by Cmd+.), intercept left-click to start a drag gesture
-        if let tm = AppDelegate.shared?.tabManager, let wsId = tm.selectedTabId,
-           let workspace = tm.tabs.first(where: { $0.id == wsId }),
+        // In dmux drag mode, intercept left-click to start a drag gesture
+        if let workspace = dmuxActiveWorkspace(),
            workspace.dmuxDragCoordinator.dragModeActive {
-            NotificationCenter.default.post(
-                name: .dmuxDragStarted,
-                object: nil,
-                userInfo: [
-                    "point": NSValue(point: event.locationInWindow),
-                    "surfaceId": terminalSurface?.id.uuidString ?? "",
-                    "event": event
-                ]
+            guard let surfaceId = terminalSurface?.id else { return }
+            let windowBounds = convert(bounds, to: nil)
+            workspace.dmuxDragCoordinator.beginDrag(
+                at: event.locationInWindow,
+                sourcePanelId: surfaceId,
+                sourcePaneBounds: windowBounds
             )
-            return
+            dmuxDragActive = true
+            return // suppress Ghostty mouse handling
         }
         #if DEBUG
         let debugPoint = convert(event.locationInWindow, from: nil)
@@ -5427,15 +5450,28 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseUp(with event: NSEvent) {
-        // Forward to dmux drag coordinator
-        NotificationCenter.default.post(
-            name: .dmuxDragEnded,
-            object: nil,
-            userInfo: [
-                "point": NSValue(point: event.locationInWindow),
-                "event": event
-            ]
-        )
+        // If a dmux drag was active, end it and dispatch the gesture
+        if dmuxDragActive, let workspace = dmuxActiveWorkspace() {
+            dmuxDragActive = false
+            let (sourcePanelId, intent) = workspace.dmuxDragCoordinator.endDrag()
+            if let sourceId = sourcePanelId {
+                switch intent {
+                case .split(let direction):
+                    _ = workspace.newTerminalSplit(
+                        from: sourceId,
+                        orientation: direction.orientation,
+                        insertFirst: direction.insertFirst
+                    )
+                case .merge(let targetId):
+                    Task { await workspace.executeMerge(sourcePanelId: sourceId, targetPanelId: targetId) }
+                case .fork(let direction):
+                    Task { await workspace.executeFork(sourcePanelId: sourceId, direction: direction) }
+                case .none:
+                    break
+                }
+            }
+            return // suppress Ghostty mouse handling
+        }
         #if DEBUG
         dlog("terminal.mouseUp surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") mods=[\(debugModifierString(event.modifierFlags))]")
         #endif
@@ -5615,15 +5651,15 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        // Forward to dmux drag coordinator if active
-        NotificationCenter.default.post(
-            name: .dmuxDragMoved,
-            object: nil,
-            userInfo: [
-                "point": NSValue(point: event.locationInWindow),
-                "event": event
-            ]
-        )
+        // If a dmux drag is active, update the coordinator and suppress Ghostty
+        if dmuxDragActive, let workspace = dmuxActiveWorkspace() {
+            let targetPanelId = dmuxPanelIdUnderPoint(event.locationInWindow)
+            _ = workspace.dmuxDragCoordinator.computeIntent(
+                currentPoint: event.locationInWindow,
+                targetPanelId: targetPanelId
+            )
+            return // suppress Ghostty mouse handling — no text selection during drag
+        }
         guard let surface = surface else { return }
         let point = convert(event.locationInWindow, from: nil)
         ghostty_surface_mouse_pos(surface, point.x, bounds.height - point.y, modsFromEvent(event))
