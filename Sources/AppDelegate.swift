@@ -8509,6 +8509,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             return true
         }
 
+        if matchShortcut(event: event, shortcut: KeyboardShortcutSettings.shortcut(for: .dmuxSplitLeft)) {
+#if DEBUG
+            dlog("shortcut.action name=dmuxSplitLeft \(debugShortcutRouteSnapshot(event: event))")
+#endif
+            _ = performSplitShortcut(direction: .left)
+            return true
+        }
+
+        if matchShortcut(event: event, shortcut: KeyboardShortcutSettings.shortcut(for: .dmuxSplitRight)) {
+#if DEBUG
+            dlog("shortcut.action name=dmuxSplitRight \(debugShortcutRouteSnapshot(event: event))")
+#endif
+            _ = performSplitShortcut(direction: .right)
+            return true
+        }
+
+        if matchShortcut(event: event, shortcut: KeyboardShortcutSettings.shortcut(for: .dmuxSplitUp)) {
+#if DEBUG
+            dlog("shortcut.action name=dmuxSplitUp \(debugShortcutRouteSnapshot(event: event))")
+#endif
+            _ = performSplitShortcut(direction: .up)
+            return true
+        }
+
+        if matchShortcut(event: event, shortcut: KeyboardShortcutSettings.shortcut(for: .dmuxSplitDown)) {
+#if DEBUG
+            dlog("shortcut.action name=dmuxSplitDown \(debugShortcutRouteSnapshot(event: event))")
+#endif
+            _ = performSplitShortcut(direction: .down)
+            return true
+        }
+
         if matchShortcut(event: event, shortcut: KeyboardShortcutSettings.shortcut(for: .splitBrowserRight)) {
 #if DEBUG
             dlog("shortcut.action name=splitBrowserRight \(debugShortcutRouteSnapshot(event: event))")

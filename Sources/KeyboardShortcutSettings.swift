@@ -42,6 +42,12 @@ enum KeyboardShortcutSettings {
         case toggleBrowserDeveloperTools
         case showBrowserJavaScriptConsole
 
+        // Dmux directional splits
+        case dmuxSplitLeft
+        case dmuxSplitRight
+        case dmuxSplitUp
+        case dmuxSplitDown
+
         var id: String { rawValue }
 
         var label: String {
@@ -76,6 +82,10 @@ enum KeyboardShortcutSettings {
             case .openBrowser: return String(localized: "shortcut.openBrowser.label", defaultValue: "Open Browser")
             case .toggleBrowserDeveloperTools: return String(localized: "shortcut.toggleBrowserDevTools.label", defaultValue: "Toggle Browser Developer Tools")
             case .showBrowserJavaScriptConsole: return String(localized: "shortcut.showBrowserJSConsole.label", defaultValue: "Show Browser JavaScript Console")
+            case .dmuxSplitLeft: return String(localized: "shortcut.dmuxSplitLeft.label", defaultValue: "Split Left")
+            case .dmuxSplitRight: return String(localized: "shortcut.dmuxSplitRight.label", defaultValue: "Split Right")
+            case .dmuxSplitUp: return String(localized: "shortcut.dmuxSplitUp.label", defaultValue: "Split Up")
+            case .dmuxSplitDown: return String(localized: "shortcut.dmuxSplitDown.label", defaultValue: "Split Down")
             }
         }
 
@@ -111,6 +121,10 @@ enum KeyboardShortcutSettings {
             case .openBrowser: return "shortcut.openBrowser"
             case .toggleBrowserDeveloperTools: return "shortcut.toggleBrowserDeveloperTools"
             case .showBrowserJavaScriptConsole: return "shortcut.showBrowserJavaScriptConsole"
+            case .dmuxSplitLeft: return "shortcut.dmuxSplitLeft"
+            case .dmuxSplitRight: return "shortcut.dmuxSplitRight"
+            case .dmuxSplitUp: return "shortcut.dmuxSplitUp"
+            case .dmuxSplitDown: return "shortcut.dmuxSplitDown"
             }
         }
 
@@ -178,6 +192,14 @@ enum KeyboardShortcutSettings {
             case .showBrowserJavaScriptConsole:
                 // Safari default: Show JavaScript Console.
                 return StoredShortcut(key: "c", command: true, shift: false, option: true, control: false)
+            case .dmuxSplitLeft:
+                return StoredShortcut(key: "←", command: false, shift: true, option: false, control: true)
+            case .dmuxSplitRight:
+                return StoredShortcut(key: "→", command: false, shift: true, option: false, control: true)
+            case .dmuxSplitUp:
+                return StoredShortcut(key: "↑", command: false, shift: true, option: false, control: true)
+            case .dmuxSplitDown:
+                return StoredShortcut(key: "↓", command: false, shift: true, option: false, control: true)
             }
         }
 
@@ -240,6 +262,11 @@ enum KeyboardShortcutSettings {
 
     static func splitRightShortcut() -> StoredShortcut { shortcut(for: .splitRight) }
     static func splitDownShortcut() -> StoredShortcut { shortcut(for: .splitDown) }
+
+    static func dmuxSplitLeftShortcut() -> StoredShortcut { shortcut(for: .dmuxSplitLeft) }
+    static func dmuxSplitRightShortcut() -> StoredShortcut { shortcut(for: .dmuxSplitRight) }
+    static func dmuxSplitUpShortcut() -> StoredShortcut { shortcut(for: .dmuxSplitUp) }
+    static func dmuxSplitDownShortcut() -> StoredShortcut { shortcut(for: .dmuxSplitDown) }
     static func toggleSplitZoomShortcut() -> StoredShortcut { shortcut(for: .toggleSplitZoom) }
     static func splitBrowserRightShortcut() -> StoredShortcut { shortcut(for: .splitBrowserRight) }
     static func splitBrowserDownShortcut() -> StoredShortcut { shortcut(for: .splitBrowserDown) }
