@@ -8541,6 +8541,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             return true
         }
 
+        // dmux drag mode toggle: Cmd+.
+        if DmuxDragCoordinator.isToggleEvent(event) {
+            if let tm = tabManager, let wsId = tm.selectedTabId,
+               let workspace = tm.tabs.first(where: { $0.id == wsId }) {
+                let isActive = workspace.dmuxDragCoordinator.toggleDragMode()
+#if DEBUG
+                dlog("dmux.dragMode toggled=\(isActive)")
+#endif
+            }
+            return true
+        }
+
+        // dmux drag mode escape
+        if DmuxDragCoordinator.isEscapeEvent(event) {
+            if let tm = tabManager, let wsId = tm.selectedTabId,
+               let workspace = tm.tabs.first(where: { $0.id == wsId }),
+               workspace.dmuxDragCoordinator.dragModeActive {
+                workspace.dmuxDragCoordinator.deactivateDragMode()
+#if DEBUG
+                dlog("dmux.dragMode deactivated via Escape")
+#endif
+                return true
+            }
+        }
+
         if matchShortcut(event: event, shortcut: KeyboardShortcutSettings.shortcut(for: .splitBrowserRight)) {
 #if DEBUG
             dlog("shortcut.action name=splitBrowserRight \(debugShortcutRouteSnapshot(event: event))")

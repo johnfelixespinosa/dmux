@@ -4,8 +4,27 @@ import XCTest
 final class DmuxDragCoordinatorTests: XCTestCase {
 
     @MainActor
+    func test_toggleDragMode() {
+        let coordinator = DmuxDragCoordinator()
+        XCTAssertFalse(coordinator.dragModeActive)
+        coordinator.toggleDragMode()
+        XCTAssertTrue(coordinator.dragModeActive)
+        coordinator.toggleDragMode()
+        XCTAssertFalse(coordinator.dragModeActive)
+    }
+
+    @MainActor
+    func test_beginDrag_requiresDragMode() {
+        let coordinator = DmuxDragCoordinator()
+        // Without drag mode, beginDrag should be a no-op
+        coordinator.beginDrag(at: NSPoint(x: 100, y: 100), sourcePanelId: UUID(), sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
+        XCTAssertFalse(coordinator.isDragging)
+    }
+
+    @MainActor
     func test_dragIntent_belowThreshold_returnsNone() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         coordinator.beginDrag(at: NSPoint(x: 100, y: 100), sourcePanelId: sourceId, sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
         let intent = coordinator.computeIntent(currentPoint: NSPoint(x: 110, y: 105), targetPanelId: nil)
@@ -15,6 +34,7 @@ final class DmuxDragCoordinatorTests: XCTestCase {
     @MainActor
     func test_dragIntent_staysInsidePane_returnsSplitRight() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         coordinator.beginDrag(at: NSPoint(x: 100, y: 200), sourcePanelId: sourceId, sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
         let intent = coordinator.computeIntent(currentPoint: NSPoint(x: 250, y: 200), targetPanelId: nil)
@@ -28,6 +48,7 @@ final class DmuxDragCoordinatorTests: XCTestCase {
     @MainActor
     func test_dragIntent_staysInsidePane_returnsSplitDown() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         coordinator.beginDrag(at: NSPoint(x: 200, y: 100), sourcePanelId: sourceId, sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
         let intent = coordinator.computeIntent(currentPoint: NSPoint(x: 200, y: 250), targetPanelId: nil)
@@ -41,6 +62,7 @@ final class DmuxDragCoordinatorTests: XCTestCase {
     @MainActor
     func test_dragIntent_crossesIntoPaneB_returnsMerge() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         let targetId = UUID()
         coordinator.beginDrag(at: NSPoint(x: 200, y: 200), sourcePanelId: sourceId, sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
@@ -55,6 +77,7 @@ final class DmuxDragCoordinatorTests: XCTestCase {
     @MainActor
     func test_dragIntent_crossesIntoEmptySpace_returnsFork() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         coordinator.beginDrag(at: NSPoint(x: 200, y: 200), sourcePanelId: sourceId, sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
         let intent = coordinator.computeIntent(currentPoint: NSPoint(x: 500, y: 200), targetPanelId: nil)
@@ -66,8 +89,9 @@ final class DmuxDragCoordinatorTests: XCTestCase {
     }
 
     @MainActor
-    func test_endDrag_returnsLastIntent() {
+    func test_endDrag_returnsLastIntentAndExitsDragMode() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         coordinator.beginDrag(at: NSPoint(x: 100, y: 100), sourcePanelId: sourceId, sourcePaneBounds: NSRect(x: 0, y: 0, width: 400, height: 400))
         _ = coordinator.computeIntent(currentPoint: NSPoint(x: 300, y: 100), targetPanelId: nil)
@@ -75,15 +99,18 @@ final class DmuxDragCoordinatorTests: XCTestCase {
         XCTAssertEqual(panelId, sourceId)
         if case .split = intent { } else { XCTFail("Expected split") }
         XCTAssertFalse(coordinator.isDragging)
+        XCTAssertFalse(coordinator.dragModeActive, "Drag mode should auto-exit after completing a gesture")
     }
 
     @MainActor
-    func test_cancelDrag_resetsState() {
+    func test_deactivateDragMode_cancelsActiveDrag() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         coordinator.beginDrag(at: .zero, sourcePanelId: UUID(), sourcePaneBounds: .zero)
-        coordinator.cancelDrag()
+        XCTAssertTrue(coordinator.isDragging)
+        coordinator.deactivateDragMode()
         XCTAssertFalse(coordinator.isDragging)
+        XCTAssertFalse(coordinator.dragModeActive)
         XCTAssertNil(coordinator.sourcePanelId)
-        XCTAssertEqual(coordinator.currentIntent, .none)
     }
 }

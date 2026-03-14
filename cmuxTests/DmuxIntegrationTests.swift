@@ -104,6 +104,7 @@ final class DmuxIntegrationTests: XCTestCase {
     @MainActor
     func test_dragCoordinator_intentTransitions() {
         let coordinator = DmuxDragCoordinator()
+        coordinator.toggleDragMode()
         let sourceId = UUID()
         let targetId = UUID()
         let bounds = NSRect(x: 0, y: 0, width: 400, height: 400)
@@ -196,10 +197,13 @@ final class DmuxIntegrationTests: XCTestCase {
 
     // MARK: - Drag Coordinator Activation Check
 
-    func test_dragCoordinator_activationModifiers() {
-        // This tests the static method — we can't easily create NSEvents in tests,
-        // but we can verify the modifier flags constant is set correctly
-        let expectedModifiers: NSEvent.ModifierFlags = [.control, .shift]
-        XCTAssertEqual(DmuxDragCoordinator.activationModifiers, expectedModifiers)
+    @MainActor
+    func test_dragCoordinator_toggleActivation() {
+        let coordinator = DmuxDragCoordinator()
+        XCTAssertFalse(coordinator.dragModeActive)
+        coordinator.toggleDragMode()
+        XCTAssertTrue(coordinator.dragModeActive)
+        coordinator.deactivateDragMode()
+        XCTAssertFalse(coordinator.dragModeActive)
     }
 }

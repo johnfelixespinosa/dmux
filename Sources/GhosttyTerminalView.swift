@@ -5390,8 +5390,10 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseDown(with event: NSEvent) {
-        // Intercept dmux drag activation (Ctrl+Shift+click)
-        if DmuxDragCoordinator.isActivated(event: event) {
+        // In dmux drag mode (toggled by Cmd+.), intercept left-click to start a drag gesture
+        if let tm = AppDelegate.shared?.tabManager, let wsId = tm.selectedTabId,
+           let workspace = tm.tabs.first(where: { $0.id == wsId }),
+           workspace.dmuxDragCoordinator.dragModeActive {
             NotificationCenter.default.post(
                 name: .dmuxDragStarted,
                 object: nil,
