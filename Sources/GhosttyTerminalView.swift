@@ -2974,6 +2974,17 @@ final class TerminalSurface: Identifiable, ObservableObject {
             }
         }
 
+        // Primary dmux env vars (new canonical names).
+        env["DMUX_SURFACE_ID"] = id.uuidString
+        env["DMUX_WORKSPACE_ID"] = tabId.uuidString
+        env["DMUX_PANEL_ID"] = id.uuidString
+        env["DMUX_TAB_ID"] = tabId.uuidString
+        env["DMUX_SOCKET_PATH"] = SocketControlSettings.socketPath()
+        if let bundleId = Bundle.main.bundleIdentifier, !bundleId.isEmpty {
+            env["DMUX_BUNDLE_ID"] = bundleId
+        }
+
+        // Backward-compatible CMUX_* aliases — keep for existing shells, wrappers, and state files.
         env["CMUX_SURFACE_ID"] = id.uuidString
         env["CMUX_WORKSPACE_ID"] = tabId.uuidString
         // Backward-compatible shell integration keys used by existing scripts/tests.
@@ -2987,6 +2998,10 @@ final class TerminalSurface: Identifiable, ObservableObject {
         // Port range for this workspace (base/range snapshotted once per app session)
         do {
             let startPort = Self.sessionPortBase + portOrdinal * Self.sessionPortRangeSize
+            env["DMUX_PORT"] = String(startPort)
+            env["DMUX_PORT_END"] = String(startPort + Self.sessionPortRangeSize - 1)
+            env["DMUX_PORT_RANGE"] = String(Self.sessionPortRangeSize)
+            // Backward-compatible CMUX_* aliases.
             env["CMUX_PORT"] = String(startPort)
             env["CMUX_PORT_END"] = String(startPort + Self.sessionPortRangeSize - 1)
             env["CMUX_PORT_RANGE"] = String(Self.sessionPortRangeSize)
@@ -2994,6 +3009,7 @@ final class TerminalSurface: Identifiable, ObservableObject {
 
         let claudeHooksEnabled = ClaudeCodeIntegrationSettings.hooksEnabled()
         if !claudeHooksEnabled {
+            env["DMUX_CLAUDE_HOOKS_DISABLED"] = "1"
             env["CMUX_CLAUDE_HOOKS_DISABLED"] = "1"
         }
 

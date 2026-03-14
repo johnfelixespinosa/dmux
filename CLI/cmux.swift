@@ -125,9 +125,9 @@ private final class CLISocketSentryTelemetry {
         self.command = command.lowercased()
         self.subcommand = commandArgs.first?.lowercased() ?? "help"
         self.socketPath = socketPath
-        self.envSocketPath = processEnv["CMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET"]
-        self.workspaceId = processEnv["CMUX_WORKSPACE_ID"]
-        self.surfaceId = processEnv["CMUX_SURFACE_ID"]
+        self.envSocketPath = processEnv["DMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET_PATH"] ?? processEnv["CMUX_SOCKET"]
+        self.workspaceId = processEnv["DMUX_WORKSPACE_ID"] ?? processEnv["CMUX_WORKSPACE_ID"]
+        self.surfaceId = processEnv["DMUX_SURFACE_ID"] ?? processEnv["CMUX_SURFACE_ID"]
         self.disabledByEnv =
             processEnv["CMUX_CLI_SENTRY_DISABLED"] == "1" ||
             processEnv["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1"
@@ -945,7 +945,7 @@ struct CMUXCLI {
     func run() throws {
         let processEnv = ProcessInfo.processInfo.environment
         let envSocketPath: String? = {
-            for key in ["CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
+            for key in ["DMUX_SOCKET_PATH", "CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
                 guard let raw = processEnv[key] else { continue }
                 let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
@@ -2843,11 +2843,11 @@ struct CMUXCLI {
         }
 
         let action = actionRaw.lowercased().replacingOccurrences(of: "-", with: "_")
-        let workspaceArg = workspaceOpt ?? (windowOverride == nil ? ProcessInfo.processInfo.environment["CMUX_WORKSPACE_ID"] : nil)
+        let workspaceArg = workspaceOpt ?? (windowOverride == nil ? (ProcessInfo.processInfo.environment["DMUX_WORKSPACE_ID"] ?? ProcessInfo.processInfo.environment["CMUX_WORKSPACE_ID"]) : nil)
         let tabArg = tabOpt
             ?? surfaceOpt
             ?? (workspaceOpt == nil && windowOverride == nil
-                ? (ProcessInfo.processInfo.environment["CMUX_TAB_ID"] ?? ProcessInfo.processInfo.environment["CMUX_SURFACE_ID"])
+                ? (ProcessInfo.processInfo.environment["DMUX_TAB_ID"] ?? ProcessInfo.processInfo.environment["CMUX_TAB_ID"] ?? ProcessInfo.processInfo.environment["DMUX_SURFACE_ID"] ?? ProcessInfo.processInfo.environment["CMUX_SURFACE_ID"])
                 : nil)
 
         let workspaceId = try normalizeWorkspaceHandle(workspaceArg, client: client, allowCurrent: true)
@@ -4649,9 +4649,9 @@ struct CMUXCLI {
 
             Flags:
               --action <name>              Action name (required if not positional)
-              --tab <id|ref|index>         Target tab (accepts tab:<n> or surface:<n>; default: $CMUX_TAB_ID, then $CMUX_SURFACE_ID, then focused tab)
+              --tab <id|ref|index>         Target tab (accepts tab:<n> or surface:<n>; default: $DMUX_TAB_ID/$CMUX_TAB_ID, then $DMUX_SURFACE_ID/$CMUX_SURFACE_ID, then focused tab)
               --surface <id|ref|index>     Alias for --tab (backward compatibility)
-              --workspace <id|ref|index>   Workspace context (default: current/$CMUX_WORKSPACE_ID)
+              --workspace <id|ref|index>   Workspace context (default: current/$DMUX_WORKSPACE_ID/$CMUX_WORKSPACE_ID)
               --title <text>               Title for rename (or pass trailing title text)
               --url <url>                  Optional URL for new-browser-right
 
@@ -4666,11 +4666,11 @@ struct CMUXCLI {
 
             Rename a tab (surface). Defaults to the focused tab, using:
             1) explicit --tab/--surface
-            2) $CMUX_TAB_ID / $CMUX_SURFACE_ID
+            2) $DMUX_TAB_ID / $DMUX_SURFACE_ID (or legacy $CMUX_TAB_ID / $CMUX_SURFACE_ID)
             3) focused tab in the resolved workspace context
 
             Flags:
-              --workspace <id|ref>   Workspace context (default: current/$CMUX_WORKSPACE_ID)
+              --workspace <id|ref>   Workspace context (default: current/$DMUX_WORKSPACE_ID/$CMUX_WORKSPACE_ID)
               --tab <id|ref>         Target tab (accepts tab:<n> or surface:<n>)
               --surface <id|ref>     Alias for --tab
               --title <text>         New title (or pass trailing title)
@@ -7450,7 +7450,7 @@ struct CMUXCLI {
 
     private func claudeTeamsResolvedSocketPath(processEnvironment: [String: String]) -> String {
         let envSocketPath: String? = {
-            for key in ["CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
+            for key in ["DMUX_SOCKET_PATH", "CMUX_SOCKET_PATH", "CMUX_SOCKET"] {
                 guard let raw = processEnvironment[key] else { continue }
                 let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmed.isEmpty {
@@ -7586,16 +7586,20 @@ struct CMUXCLI {
         setenv("TMUX", fakeTmuxValue, 1)
         setenv("TMUX_PANE", fakeTmuxPane, 1)
         setenv("TERM", fakeTerm, 1)
+        setenv("DMUX_SOCKET_PATH", socketPath, 1)
         setenv("CMUX_SOCKET_PATH", socketPath, 1)
         setenv("CMUX_SOCKET", socketPath, 1)
         if let explicitPassword,
            !explicitPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            setenv("DMUX_SOCKET_PASSWORD", explicitPassword, 1)
             setenv("CMUX_SOCKET_PASSWORD", explicitPassword, 1)
         }
         unsetenv("TERM_PROGRAM")
         if let focusedContext {
+            setenv("DMUX_WORKSPACE_ID", focusedContext.workspaceId, 1)
             setenv("CMUX_WORKSPACE_ID", focusedContext.workspaceId, 1)
             if let surfaceId = focusedContext.surfaceId, !surfaceId.isEmpty {
+                setenv("DMUX_SURFACE_ID", surfaceId, 1)
                 setenv("CMUX_SURFACE_ID", surfaceId, 1)
             }
         }
@@ -7631,10 +7635,12 @@ struct CMUXCLI {
     ) throws {
         let processEnvironment = ProcessInfo.processInfo.environment
         var launcherEnvironment = processEnvironment
+        launcherEnvironment["DMUX_SOCKET_PATH"] = socketPath
         launcherEnvironment["CMUX_SOCKET_PATH"] = socketPath
         launcherEnvironment["CMUX_SOCKET"] = socketPath
         if let explicitPassword,
            !explicitPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            launcherEnvironment["DMUX_SOCKET_PASSWORD"] = explicitPassword
             launcherEnvironment["CMUX_SOCKET_PASSWORD"] = explicitPassword
         }
         let shimDirectory = try createClaudeTeamsShimDirectory()
@@ -9626,12 +9632,17 @@ struct CMUXCLI {
           help
 
         Environment:
-          CMUX_WORKSPACE_ID   Auto-set in cmux terminals. Used as default --workspace for
+          DMUX_WORKSPACE_ID   Auto-set in dmux terminals. Used as default --workspace for
                               ALL commands (send, list-panels, new-split, notify, etc.).
-          CMUX_TAB_ID         Optional alias used by `tab-action`/`rename-tab` as default --tab.
-          CMUX_SURFACE_ID     Auto-set in cmux terminals. Used as default --surface.
-          CMUX_SOCKET_PATH    Override the Unix socket path. Without this, the CLI defaults
-                              to ~/Library/Application Support/cmux/cmux.sock and auto-discovers tagged/debug sockets.
+          DMUX_TAB_ID         Optional alias used by `tab-action`/`rename-tab` as default --tab.
+          DMUX_SURFACE_ID     Auto-set in dmux terminals. Used as default --surface.
+          DMUX_SOCKET_PATH    Override the Unix socket path. Without this, the CLI defaults
+                              to ~/Library/Application Support/dmux/dmux.sock and auto-discovers tagged/debug sockets.
+
+          CMUX_WORKSPACE_ID   Backward-compatible alias for DMUX_WORKSPACE_ID (kept for existing shells and scripts).
+          CMUX_TAB_ID         Backward-compatible alias for DMUX_TAB_ID.
+          CMUX_SURFACE_ID     Backward-compatible alias for DMUX_SURFACE_ID.
+          CMUX_SOCKET_PATH    Backward-compatible alias for DMUX_SOCKET_PATH.
         """
     }
 }

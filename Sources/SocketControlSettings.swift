@@ -61,7 +61,7 @@ enum SocketControlMode: String, CaseIterable, Identifiable {
 }
 
 enum SocketControlPasswordStore {
-    static let directoryName = "cmux"
+    static let directoryName = "dmux"
     static let fileName = "socket-control-password"
     private static let keychainMigrationDefaultsKey = "socketControlPasswordMigrationVersion"
     private static let keychainMigrationVersion = 1
@@ -80,7 +80,8 @@ enum SocketControlPasswordStore {
         allowLazyKeychainFallback: Bool = false,
         loadKeychainPassword: () -> String? = { loadLegacyPasswordFromKeychain() }
     ) -> String? {
-        if let envPassword = normalized(environment[SocketControlSettings.socketPasswordEnvKey]) {
+        if let envPassword = normalized(environment[SocketControlSettings.socketPasswordEnvKey])
+            ?? normalized(environment[SocketControlSettings.socketPasswordEnvKeyLegacy]) {
             return envPassword
         }
         let filePassword: String?
@@ -289,12 +290,15 @@ enum SocketControlPasswordStore {
 struct SocketControlSettings {
     static let appStorageKey = "socketControlMode"
     static let legacyEnabledKey = "socketControlEnabled"
-    static let allowSocketPathOverrideKey = "CMUX_ALLOW_SOCKET_OVERRIDE"
-    static let socketPasswordEnvKey = "CMUX_SOCKET_PASSWORD"
-    static let launchTagEnvKey = "CMUX_TAG"
-    static let baseDebugBundleIdentifier = "com.cmuxterm.app.debug"
-    private static let socketDirectoryName = "cmux"
-    private static let stableSocketFileName = "cmux.sock"
+    static let allowSocketPathOverrideKey = "DMUX_ALLOW_SOCKET_OVERRIDE"
+    static let allowSocketPathOverrideKeyLegacy = "CMUX_ALLOW_SOCKET_OVERRIDE"
+    static let socketPasswordEnvKey = "DMUX_SOCKET_PASSWORD"
+    static let socketPasswordEnvKeyLegacy = "CMUX_SOCKET_PASSWORD"
+    static let launchTagEnvKey = "DMUX_TAG"
+    static let launchTagEnvKeyLegacy = "CMUX_TAG"
+    static let baseDebugBundleIdentifier = "com.dmuxterm.app.debug"
+    private static let socketDirectoryName = "dmux"
+    private static let stableSocketFileName = "dmux.sock"
     private static let lastSocketPathFileName = "last-socket-path"
     static let legacyStableDefaultSocketPath = "/tmp/cmux.sock"
     static let legacyLastSocketPathFile = "/tmp/cmux-last-socket-path"
@@ -364,7 +368,7 @@ struct SocketControlSettings {
     static func launchTag(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> String? {
-        guard let raw = environment[launchTagEnvKey] else { return nil }
+        guard let raw = environment[launchTagEnvKey] ?? environment[launchTagEnvKeyLegacy] else { return nil }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
@@ -503,7 +507,7 @@ struct SocketControlSettings {
         bundleIdentifier: String?,
         isDebugBuild: Bool
     ) -> Bool {
-        if isTruthy(environment[allowSocketPathOverrideKey]) {
+        if isTruthy(environment[allowSocketPathOverrideKey]) || isTruthy(environment[allowSocketPathOverrideKeyLegacy]) {
             return true
         }
         if isDebugLikeBundleIdentifier(bundleIdentifier) || isStagingBundleIdentifier(bundleIdentifier) {
@@ -514,13 +518,19 @@ struct SocketControlSettings {
 
     static func isDebugLikeBundleIdentifier(_ bundleIdentifier: String?) -> Bool {
         guard let bundleIdentifier else { return false }
-        return bundleIdentifier == "com.cmuxterm.app.debug"
+        return bundleIdentifier == "com.dmuxterm.app.debug"
+            || bundleIdentifier.hasPrefix("com.dmuxterm.app.debug.")
+            // Legacy cmux bundle IDs kept for backward compatibility.
+            || bundleIdentifier == "com.cmuxterm.app.debug"
             || bundleIdentifier.hasPrefix("com.cmuxterm.app.debug.")
     }
 
     static func isStagingBundleIdentifier(_ bundleIdentifier: String?) -> Bool {
         guard let bundleIdentifier else { return false }
-        return bundleIdentifier == "com.cmuxterm.app.staging"
+        return bundleIdentifier == "com.dmuxterm.app.staging"
+            || bundleIdentifier.hasPrefix("com.dmuxterm.app.staging.")
+            // Legacy cmux bundle IDs kept for backward compatibility.
+            || bundleIdentifier == "com.cmuxterm.app.staging"
             || bundleIdentifier.hasPrefix("com.cmuxterm.app.staging.")
     }
 
