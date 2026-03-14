@@ -106,6 +106,12 @@ struct WorkspaceContentView: View {
                     workspace.bonsplitController.focusPane(paneId)
                 }
         }
+        .overlay(
+            DmuxDragOverlayView(
+                coordinator: workspace.dmuxDragCoordinator,
+                paneFrames: [:] // TODO: populate with actual pane frames in future iteration
+            )
+        )
         .internalOnlyTabDrag()
         // Split zoom swaps Bonsplit between the full split tree and a single pane view.
         // Recreate the Bonsplit subtree on zoom enter/exit so stale pre-zoom pane chrome

@@ -5390,6 +5390,19 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseDown(with event: NSEvent) {
+        // Intercept dmux drag activation (Ctrl+Shift+click)
+        if DmuxDragCoordinator.isActivated(event: event) {
+            NotificationCenter.default.post(
+                name: .dmuxDragStarted,
+                object: nil,
+                userInfo: [
+                    "point": NSValue(point: event.locationInWindow),
+                    "surfaceId": terminalSurface?.id.uuidString ?? "",
+                    "event": event
+                ]
+            )
+            return
+        }
         #if DEBUG
         let debugPoint = convert(event.locationInWindow, from: nil)
         dlog("terminal.mouseDown surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") mods=[\(debugModifierString(event.modifierFlags))] clickCount=\(event.clickCount) point=(\(String(format: "%.0f", debugPoint.x)),\(String(format: "%.0f", debugPoint.y)))")
@@ -5412,6 +5425,15 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseUp(with event: NSEvent) {
+        // Forward to dmux drag coordinator
+        NotificationCenter.default.post(
+            name: .dmuxDragEnded,
+            object: nil,
+            userInfo: [
+                "point": NSValue(point: event.locationInWindow),
+                "event": event
+            ]
+        )
         #if DEBUG
         dlog("terminal.mouseUp surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") mods=[\(debugModifierString(event.modifierFlags))]")
         #endif
@@ -5591,6 +5613,15 @@ class GhosttyNSView: NSView, NSUserInterfaceValidations {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        // Forward to dmux drag coordinator if active
+        NotificationCenter.default.post(
+            name: .dmuxDragMoved,
+            object: nil,
+            userInfo: [
+                "point": NSValue(point: event.locationInWindow),
+                "event": event
+            ]
+        )
         guard let surface = surface else { return }
         let point = convert(event.locationInWindow, from: nil)
         ghostty_surface_mouse_pos(surface, point.x, bounds.height - point.y, modsFromEvent(event))

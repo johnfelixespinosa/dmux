@@ -922,6 +922,9 @@ final class Workspace: Identifiable, ObservableObject {
     /// The bonsplit controller managing the split panes for this workspace
     let bonsplitController: BonsplitController
 
+    /// Drag coordinator for dmux context transfer gestures
+    let dmuxDragCoordinator = DmuxDragCoordinator()
+
     /// Mapping from bonsplit TabID to our Panel instances
     @Published private(set) var panels: [UUID: any Panel] = [:]
 
@@ -5223,4 +5226,60 @@ extension Workspace: BonsplitDelegate {
     }
 
     // No post-close polling refresh loop: we rely on view invariants and Ghostty's wakeups.
+
+    // MARK: - dmux Context Transfer
+
+    /// Execute a merge: extract context from source, inject into target, close source.
+    func executeMerge(sourcePanelId: UUID, targetPanelId: UUID) async {
+        guard let sourcePanel = panels[sourcePanelId] as? TerminalPanel,
+              let targetPanel = panels[targetPanelId] as? TerminalPanel
+        else { return }
+
+        let session = AgentSessionRegistry.shared.session(forPanelId: sourcePanelId)
+        let provider: AgentContextProvider = (session?.agent == .codex) ? CodexProvider() : ClaudeProvider()
+
+        let payload: TransferPayload
+        if let session = session {
+            payload = await DmuxTransferCoordinator.extractAndPrepare(session: session, provider: provider)
+        } else {
+            let cwd = sourcePanel.directory
+            if let discovered = provider.discoverSession(cwd: cwd) {
+                payload = await DmuxTransferCoordinator.extractAndPrepare(session: discovered, provider: provider)
+            } else {
+                payload = .empty(reason: "No agent session found in source pane")
+            }
+        }
+
+        DmuxTransferCoordinator.inject(payload: payload, into: targetPanel)
+        _ = closePanel(sourcePanelId)
+    }
+
+    /// Execute a fork: create new split pane with context from source.
+    func executeFork(sourcePanelId: UUID, direction: SplitDirection) async {
+        guard let sourcePanel = panels[sourcePanelId] as? TerminalPanel else { return }
+
+        guard let newPanel = newTerminalSplit(
+            from: sourcePanelId,
+            orientation: direction.orientation,
+            insertFirst: direction.insertFirst
+        ) else { return }
+
+        let session = AgentSessionRegistry.shared.session(forPanelId: sourcePanelId)
+        let provider: AgentContextProvider = (session?.agent == .codex) ? CodexProvider() : ClaudeProvider()
+
+        let payload: TransferPayload
+        if let session = session {
+            payload = await DmuxTransferCoordinator.extractAndPrepare(session: session, provider: provider)
+        } else {
+            let cwd = sourcePanel.directory
+            if let discovered = provider.discoverSession(cwd: cwd) {
+                payload = await DmuxTransferCoordinator.extractAndPrepare(session: discovered, provider: provider)
+            } else {
+                payload = .empty(reason: "No agent session found in source pane")
+            }
+        }
+
+        try? await Task.sleep(nanoseconds: 500_000_000) // wait for shell startup
+        DmuxTransferCoordinator.inject(payload: payload, into: newPanel)
+    }
 }
